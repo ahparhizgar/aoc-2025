@@ -1,5 +1,3 @@
-import java.lang.Math.floorMod
-
 fun main() {
 
     val testInput = readInput("Day01_test")
@@ -14,7 +12,7 @@ fun main() {
 fun part1(input: List<String>): Int {
     var result = 0
     input.fold(50) { currentValue, line ->
-        floorMod(currentValue + line.sign() * line.value(), 100).also {
+        (currentValue + line.sign() * line.value()).mod(100).also {
             if (it == 0) {
                 result++
             }
@@ -27,7 +25,7 @@ fun part2(input: List<String>): Int {
     var result = 0
     input.fold(50) { currentValue, line ->
         val inc = line.sign() * line.value()
-        floorMod(currentValue + inc, 100).also {
+        (currentValue + inc).mod(100).also {
             result += if (line.sign() > 0) {
                 (currentValue + inc) / 100
             } else {
