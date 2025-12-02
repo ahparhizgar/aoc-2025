@@ -9,7 +9,7 @@ fun main() {
     part2(input).println()
 }
 
-fun part1(input: List<String>): Int {
+private fun part1(input: List<String>): Int {
     var result = 0
     input.fold(50) { currentValue, line ->
         (currentValue + line.sign() * line.value()).mod(100).also {
@@ -21,7 +21,7 @@ fun part1(input: List<String>): Int {
     return result
 }
 
-fun part2(input: List<String>): Int {
+private fun part2(input: List<String>): Int {
     var result = 0
     input.fold(50) { currentValue, line ->
         val inc = line.sign() * line.value()
