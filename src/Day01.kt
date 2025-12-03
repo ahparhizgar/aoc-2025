@@ -1,10 +1,10 @@
 fun main() {
-
     val testInput = readInput("Day01_test")
-    check(part1(testInput) == 3)
-
     val input = readInput("Day01")
+
+    check(part1(testInput) == 3)
     part1(input).println()
+
     check(part2(testInput) == 6)
     part2(input).println()
 }

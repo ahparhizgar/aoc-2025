@@ -1,8 +1,10 @@
 fun main() {
     val testInput = readInput("Day02_test")
-    check(part1(testInput) == 1227775554L)
     val input = readInput("Day02")
+
+    check(part1(testInput) == 1227775554L)
     part1(input).println()
+
     check(part2(testInput) == 4174379265L)
     part2(input).println()
 }
