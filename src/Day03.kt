@@ -5,49 +5,48 @@ fun main() {
     check(part1(testInput) == 357L)
     part1(input).println()
 
-    check(part2(testInput) == 3121910778619L)
+    check(part2(testInput) == 3121910778619)
     part2(input).println()
 }
 
 private fun part1(input: List<String>): Long {
-    return input.sumOf { line ->
-        if (line.length < 2) throw IllegalArgumentException("Each bank must contain at least two batteries")
+    return input.sumOf { maxPower(bank = it).toLong() }
+}
 
-        var maxPrefixDigit = -1
-        var bestPair = -1
-        for (j in 1 until line.length) {
-            val prevDigit = line[j - 1] - '0'
-            if (prevDigit > maxPrefixDigit) maxPrefixDigit = prevDigit
-            val curDigit = line[j] - '0'
-            val value = 10 * maxPrefixDigit + curDigit
-            if (value > bestPair) bestPair = value
+fun maxPower(bank: String): String {
+    with(bank) {
+        val max = max()
+        val indexOfMax = indexOf(max)
+        return if (indexOfMax != lastIndex) {
+            val secondMax = drop(indexOfMax + 1).max()
+            "$max$secondMax"
+        } else {
+            val newMax = dropLast(1).max()
+            "$newMax$max"
         }
-        bestPair.toLong()
     }
 }
 
 private fun part2(input: List<String>): Long {
-    val k = 12
-    return input.sumOf { line ->
-        val n = line.length
-        if (n < k) throw IllegalArgumentException("Each bank must contain at least $k batteries")
+    return input.sumOf { maxPowerN(it, 12).toLong() }
+}
 
-        val stack = ArrayList<Char>(k)
-        for (i in line.indices) {
-            val c = line[i]
-            while (stack.isNotEmpty() && stack.size + (n - i) > k && stack.last() < c) {
-                stack.removeAt(stack.size - 1)
-            }
-            if (stack.size < k) {
-                stack.add(c)
-            }
+fun maxPowerN(bank: String, digits: Int): String {
+    with(bank) {
+        if (digits == 1) {
+            return max().toString()
         }
-        val chosen = if (stack.size > k) stack.subList(0, k) else stack
+        val max = dropLast(digits - 1).max().toString()
+        return max + maxPowerN(bank.substring(indexOf(max) + 1), digits - 1)
+    }
+}
 
-        var value = 0L
-        for (ch in chosen) {
-            value = value * 10 + (ch - '0')
+fun maxPowerNTail(bank: String, digits: Int): String {
+    with(bank) {
+        if (digits == 1) {
+            return max().toString()
         }
-        value
+        val max = dropLast(digits - 1).max().toString()
+        return max + maxPowerN(bank.substring(indexOf(max) + 1), digits - 1)
     }
 }
