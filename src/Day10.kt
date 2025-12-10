@@ -1,17 +1,18 @@
-import kotlin.math.max
 import kotlin.math.min
 
 fun main() {
     val testInput = readInput("Day10_test")
     val input = readInput("Day10")
-    check(part1(testInput) == 7L)
-    part1(input).println()
+    check(part1PowerSet(testInput) == 7L)
+    check(part1PowerSet(input) == 542L)
+    check(part1Bfs(testInput) == 7L)
+    check(part1Bfs(input) == 542L)
 
 //    check(part2(testInput) == 33L)
 //    part2(input).println()
 }
 
-private fun part1(input: List<String>): Long {
+private fun part1PowerSet(input: List<String>): Long {
     var total = 0L
     val diagRegex = Regex("\\[([.#]+)\\]")
     val buttonRegex = Regex("\\(([^)]*)\\)")
@@ -87,6 +88,96 @@ private fun part1(input: List<String>): Long {
     return total
 }
 
+
+private fun part1Bfs(input: List<String>): Long {
+    var total = 0L
+
+    for (line in input)  {
+        total += part1GptOneLine(line)
+    }
+
+    return total
+}
+
+val diagRegex = Regex("\\[([.#]+)\\]")
+val buttonRegex = Regex("\\(([^)]*)\\)")
+
+private fun part1GptOneLine(line: String): Long {
+    if (line.isBlank()) return 0L
+
+    val diagMatch = diagRegex.find(line) ?: error("No indicator diagram found in line: $line")
+    val diagram = diagMatch.groupValues[1]
+    val n = diagram.length
+
+    // Build target mask
+    var target = 0L
+    for (i in 0 until n) {
+        if (diagram[i] == '#') {
+            target = target or (1L shl i)
+        }
+    }
+
+    // Parse buttons -> bitmasks
+    val keepMask = if (n == 64) -1L else (1L shl n) - 1L
+    val buttonMasks = mutableListOf<Long>()
+    for (bm in buttonRegex.findAll(line)) {
+        val inner = bm.groupValues[1].trim()
+        if (inner.isEmpty()) continue
+        var mask = 0L
+        inner.split(',').forEach { tok ->
+            val s = tok.trim()
+            if (s.isNotEmpty()) {
+                val idx = s.toInt()
+                require(idx >= 0) { "Negative index in button: $s" }
+                // Ignore bits beyond n to keep state space to 2^n
+                if (idx < 64) {
+                    mask = mask or (1L shl idx)
+                } else {
+                    // Indices >= 64 can't be represented in Long state; they don't affect the first n lights anyway.
+                    // We just drop them to keep BFS over n-light subspace.
+                }
+            }
+        }
+        mask = mask and keepMask
+        if (mask != 0L) buttonMasks.add(mask)
+    }
+
+    // Deduplicate buttons to reduce branching
+    val uniqueButtons = buttonMasks.toMutableSet().toList()
+
+    // Trivial case: already at target
+    if (target == 0L) {
+        // zero presses needed
+        return 0L
+    }
+
+    // If there are no buttons but target != 0 => impossible
+    require(uniqueButtons.isNotEmpty()) { "No buttons available to reach non-zero target in line: $line" }
+
+    // BFS on state space of n lights (bitmask in [0 .. 2^n - 1])
+    val dist = HashMap<Long, Int>(1 shl minOf(n, 20))
+    val q: ArrayDeque<Long> = ArrayDeque()
+    dist[0L] = 0
+    q.add(0L)
+
+    var found: Int? = null
+    while (q.isNotEmpty()) {
+        val s = q.removeFirst()
+        val d = dist[s]!!
+        if (s == target) {
+            found = d
+            break
+        }
+        for (b in uniqueButtons) {
+            val ns = s xor b
+            if (dist.putIfAbsent(ns, d + 1) == null) {
+                q.add(ns)
+            }
+        }
+    }
+
+    return found?.toLong() ?: error("Target state unreachable for line: $line")
+}
 // functional / fold approach
 fun <T> powerSet(s: Set<T>): List<Set<T>> =
     s.fold(listOf(emptySet())) { acc, e -> acc + acc.map { it + e } }// bitmask approach (deterministic order)
